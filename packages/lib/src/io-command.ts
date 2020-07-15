@@ -463,6 +463,8 @@ export abstract class ListingOutputAPICommand<O, L> extends ListingOutputAPIComm
 export abstract class SelectingAPICommandBase<ID, L> extends APICommand {
 	protected abstract async getIdFromUser(items: L[]): Promise<ID>
 
+	protected translateToId?(idOrIndex: ID | string, listFunction: ListCallback<L>): Promise<ID>
+
 	private _entityId?: ID
 	protected get entityId(): ID {
 		if (!this._entityId) {
@@ -471,16 +473,25 @@ export abstract class SelectingAPICommandBase<ID, L> extends APICommand {
 		return this._entityId
 	}
 
+	protected acceptIndexId = false
+
 	protected async processNormally(id: ID | undefined,
 			listCallback: ListCallback<L>,
 			actionCallback: ActionCallback<ID>,
 			successMessage?: string): Promise<void> {
 		try {
 			if (id) {
-				if (typeof id !== 'string' || !isIndexArgument(id)) {
-					this._entityId = id
+				if (this.acceptIndexId) {
+					if (!this.translateToId) {
+						throw new Error('translateToId must be defined if acceptIndexId is true')
+					}
+					this._entityId = await this.translateToId(id, listCallback)
+				} else if (typeof id === 'string' && isIndexArgument(id)) {
+					throw new Error('List index references not supported for this command. Specify'
+						+ ' id instead or omit argument and select from list')
 				} else {
-					throw new Error('List index references not supported for this command. Specify id instead or omit argument and select from list')
+					// @ts-ignore
+					this._entityId = idOrIndex
 				}
 			} else {
 				const items = this.sort(await listCallback())
@@ -493,7 +504,7 @@ export abstract class SelectingAPICommandBase<ID, L> extends APICommand {
 			}
 			await actionCallback(this.entityId)
 			if (successMessage) {
-				this.log(successMessage.replace('{{id}}', JSON.stringify(this._entityId)))
+				this.log(successMessage.replace('{{id}}', JSON.stringify(this.entityId)))
 			}
 		} catch (err) {
 			this.logger.error(`caught error ${err}`)
@@ -659,6 +670,7 @@ export abstract class SelectingOutputAPICommandBase<ID, O, L> extends APICommand
 	protected translateToId?(idOrIndex: ID | string, listFunction: ListCallback<L>): Promise<ID>
 
 	protected acceptIndexId = false
+	protected inputPrompt = 'Enter id or index'
 
 	private _entityId?: ID
 	protected get entityId(): ID {

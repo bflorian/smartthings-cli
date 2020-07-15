@@ -55,6 +55,7 @@
 		"@oclif/plugin-not-found": "^1.2.3",
 		"@smartthings/cli-lib": "^0.0.0",
 		"aws-sdk": "^2.690.0",
+		"axios": "^0.19.2",
 		"generator-smartthings": "^1.5.0",
 		"lodash": "^4.17.15",
 		"node": "^12.16.2",
