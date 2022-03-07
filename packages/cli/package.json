@@ -72,7 +72,8 @@
 		"cli-table": "^0.3.11",
 		"inquirer": "^8.2.0",
 		"js-yaml": "^4.1.0",
-		"lodash": "^4.17.21"
+		"lodash": "^4.17.21",
+		"open": "^8.4.0"
 	},
 	"devDependencies": {
 		"@smartthings/cli-testlib": "^1.0.0-beta.1",
